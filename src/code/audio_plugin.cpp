@@ -9,11 +9,6 @@
 
 #include "mediaplayer.h"
 
-QUrl AudioPlugin::componentUrl(const QString &fileName) const
-{
-    return QUrl(resolveFileUrl(fileName));
-}
-
 void AudioPlugin::registerTypes(const char *uri)
 {
     Q_ASSERT(QLatin1String(uri) == QLatin1String("org.mauikit.audio"));

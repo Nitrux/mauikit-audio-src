@@ -30,6 +30,11 @@ set(AUTOMOC_MOC_OPTIONS -Muri=org.mauikit.audio)
 
 project(Audio LANGUAGES CXX VERSION ${MAUIKIT_VERSION})
 
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    message(FATAL_ERROR "This project supports Linux only.")
+endif()
+
+
 if(POLICY CMP0071)
   cmake_policy(SET CMP0071 NEW)
 endif()
@@ -46,7 +51,6 @@ find_package(ECM ${REQUIRED_KF_VERSION} NO_MODULE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH})
 
 #installation paths
-include(GNUInstallDirs)
 include(FindPkgConfig)
 include(UsePkgConfig)
 
@@ -60,6 +64,30 @@ include(ECMQmlModule)
 include(ECMSourceVersionControl)
 
 include(KDEClangFormat)
+# Preserve externally supplied CMAKE_INSTALL_* paths (for distro builds)
+# while avoiding KDEInstallDirs "got its value from CMAKE_INSTALL_*" warnings.
+set(_KDE_INSTALL_DIR_SUFFIXES
+    BINDIR
+    SBINDIR
+    LIBDIR
+    LIBEXECDIR
+    INCLUDEDIR
+    LOCALSTATEDIR
+    SHAREDSTATEDIR
+    DATAROOTDIR
+    DATADIR
+    LOCALEDIR
+    MANDIR
+    INFODIR
+    SYSCONFDIR
+)
+foreach(_suffix IN LISTS _KDE_INSTALL_DIR_SUFFIXES)
+    if(DEFINED CMAKE_INSTALL_${_suffix} AND NOT DEFINED KDE_INSTALL_${_suffix})
+        set(KDE_INSTALL_${_suffix} "${CMAKE_INSTALL_${_suffix}}" CACHE PATH "KDE install dir override from CMAKE_INSTALL_${_suffix}")
+    endif()
+endforeach()
+unset(_suffix)
+unset(_KDE_INSTALL_DIR_SUFFIXES)
 include(KDEInstallDirs)
 include(KDECMakeSettings)
 include(CheckCXXCompilerFlag)
@@ -158,3 +186,14 @@ file(GLOB_RECURSE ALL_CLANG_FORMAT_SOURCE_FILES *.cpp *.h)
 kde_clang_format(${ALL_CLANG_FORMAT_SOURCE_FILES})
 
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
+
+if(NOT TARGET uninstall)
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+        IMMEDIATE
+        @ONLY)
+
+    add_custom_target(uninstall
+        COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
+endif()

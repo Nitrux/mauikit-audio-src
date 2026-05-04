@@ -22,7 +22,7 @@ else(QMMP_VERSION_DATA)
     message(FATAL_ERROR "invalid header")
 endif(QMMP_VERSION_DATA)
 
-set(PLUGIN_DIR "${CMAKE_INSTALL_LIBDIR}/MauiKitAudio" CACHE STRING "plugin path")
+set(PLUGIN_DIR "${KDE_INSTALL_LIBDIR}/MauiKitAudio" CACHE STRING "plugin path")
 set(USE_DIR_ASSOC TRUE CACHE BOOL "enable/disable inode/directory mime type association")
 
 add_subdirectory(qmmp)

@@ -62,9 +62,17 @@ include(ECMSourceVersionControl)
 include(KDEClangFormat)
 include(KDEInstallDirs)
 include(KDECMakeSettings)
+include(CheckCXXCompilerFlag)
 
 add_definitions(-DQT_DISABLE_DEPRECATED_BEFORE=0x060200 -DQT_DEPRECATED_WARNINGS -DQT_MESSAGELOGCONTEXT)
 add_compile_options(-Wall -Wextra)
+
+if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64)$")
+    check_cxx_compiler_flag("-march=x86-64-v3" CXX_SUPPORTS_X86_64_V3)
+    if(CXX_SUPPORTS_X86_64_V3)
+        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-march=x86-64-v3>)
+    endif()
+endif()
 
 # include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src) #libqmmp & libqmmpui -> move to /src
 

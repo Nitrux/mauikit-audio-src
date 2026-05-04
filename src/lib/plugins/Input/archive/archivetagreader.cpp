@@ -25,22 +25,14 @@ class IODeviceStream : public TagLib::IOStream
 {
 public:
     IODeviceStream(QIODevice *input, const QString &url) : m_input(input),
-#ifdef Q_OS_WIN
-          m_fileName(url.section(QLatin1Char('/'), -1))
-#else
           m_fileName(url.section(QLatin1Char('/'), -1).toLocal8Bit())
-#endif
     {}
 
     virtual ~IODeviceStream() {}
 
     virtual TagLib::FileName name() const override
     {
-#ifdef Q_OS_WIN
-        return QStringToFileName(m_fileName);
-#else
         return m_fileName.constData();
-#endif
     }
 #if TAGLIB_MAJOR_VERSION >= 2
     virtual TagLib::ByteVector readBlock(size_t length) override
@@ -128,11 +120,7 @@ public:
 
 private:
     QIODevice *m_input;
-#ifdef Q_OS_WIN
-    QString m_fileName;
-#else
     QByteArray m_fileName;
-#endif
 };
 
 ArchiveTagReader::ArchiveTagReader(QIODevice *input, const QString &url)

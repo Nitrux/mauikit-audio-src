@@ -34,9 +34,6 @@
 
 QString Qmmp::m_configDir;
 QString Qmmp::m_langID;
-#ifdef Q_OS_WIN
-QString Qmmp::m_appDir;
-#endif
 
 #ifdef QT_DEBUG
 Q_LOGGING_CATEGORY(core, "qmmp.core", QtDebugMsg)
@@ -49,20 +46,9 @@ Q_LOGGING_CATEGORY(plugin, "qmmp.plugin", QtWarningMsg)
 
 QString Qmmp::configDir()
 {
-#ifdef Q_OS_WIN
-    if(m_configDir.isEmpty())
-    {
-        if(isPortable())
-            return m_appDir + u"/.qmmp"_s;
-
-        return  QDir::homePath() + u"/.qmmp"_s;
-    }
-#else
     if(m_configDir.isEmpty())
         return QStringLiteral("%1/%2").arg(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation),
                                            QCoreApplication::organizationName());
-
-#endif
     return m_configDir;
 }
 
@@ -73,14 +59,10 @@ void Qmmp::setConfigDir(const QString &path)
 
 QString Qmmp::cacheDir()
 {
-#ifdef Q_OS_WIN
-    return configDir();
-#else
     if(m_configDir.isEmpty())
         return QStringLiteral("%1/%2").arg(QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation),
                                            QCoreApplication::organizationName());
     return m_configDir;
-#endif
 }
 
 QString Qmmp::strVersion()
@@ -107,8 +89,6 @@ QString Qmmp::pluginPath()
     QString fallbackPath = QStringLiteral("%1/../lib/qmmp-" STR(QMMP_VERSION_MAJOR) "." STR(QMMP_VERSION_MINOR)).arg(qApp->applicationDirPath());
 #ifdef MAUIKITAUDIO_PLUGIN_DIR
     QDir dir(QStringLiteral(MAUIKITAUDIO_PLUGIN_DIR));
-#elif defined(Q_OS_WIN) && !defined(Q_OS_CYGWIN)
-    QDir dir(qApp->applicationDirPath() + u"/plugins"_s);
 #else
     QDir dir(fallbackPath);
 #endif
@@ -167,32 +147,15 @@ void Qmmp::setUiLanguageID(const QString &code)
 
 QString Qmmp::dataPath()
 {
-#if defined(Q_OS_WIN) && !defined(Q_OS_CYGWIN)
-    return qApp->applicationDirPath();
-#else
     return QDir(QStringLiteral("%1/../share/qmmp" APP_NAME_SUFFIX).arg(qApp->applicationDirPath())).absolutePath();
-#endif
 }
 
 QString Qmmp::userDataPath()
 {
-#if defined(Q_OS_WIN) && !defined(Q_OS_CYGWIN)
-    return configDir();
-#else
     if(m_configDir.isEmpty())
     {
         return QStringLiteral("%1/%2").arg(QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation),
                                            QCoreApplication::organizationName());
     }
     return m_configDir;
-#endif
 }
-
-#ifdef Q_OS_WIN
-bool Qmmp::isPortable()
-{
-    if(m_appDir.isEmpty())
-        m_appDir = QCoreApplication::applicationDirPath();
-    return QFile::exists(m_appDir + QStringLiteral("/qmmp_portable.txt"));
-}
-#endif

@@ -72,13 +72,8 @@ QList<TrackInfo *> DecoderWavPackFactory::createPlayList(const QString &path, Tr
 
     char err[80] = { 0 };
 
-#if defined(Q_OS_WIN) && defined(OPEN_FILE_UTF8)
-    WavpackContext *ctx = WavpackOpenFileInput (filePath.toUtf8().constData(),
-                                                err, OPEN_WVC | OPEN_TAGS | OPEN_FILE_UTF8, 0);
-#else
     WavpackContext *ctx = WavpackOpenFileInput (filePath.toLocal8Bit().constData(),
                                                 err, OPEN_WVC | OPEN_TAGS, 0);
-#endif
     if (!ctx)
     {
         qCWarning(plugin, "error: %s", err);

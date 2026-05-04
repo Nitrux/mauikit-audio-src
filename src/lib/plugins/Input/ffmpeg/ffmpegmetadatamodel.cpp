@@ -33,11 +33,7 @@ FFmpegMetaDataModel::FFmpegMetaDataModel(const QString &path, bool readOnly) : M
     AVFormatContext *in = nullptr;
     m_path = path.contains(u"://"_s) ? TrackInfo::pathFromUrl(path) : path;
 
-#ifdef Q_OS_WIN
-    if (avformat_open_input(&in, m_path.toUtf8().constData(), nullptr, nullptr) < 0)
-#else
     if (avformat_open_input(&in, m_path.toLocal8Bit().constData(), nullptr, nullptr) < 0)
-#endif
         return;
 
     if(in)

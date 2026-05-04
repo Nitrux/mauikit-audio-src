@@ -147,16 +147,7 @@ OutputFactory *Output::currentFactory()
 #ifdef MAUIKITAUDIO_DEFAULT_OUTPUT
     QString name = settings.value(u"Output/current_plugin"_s, MAUIKITAUDIO_DEFAULT_OUTPUT).toString();
 #else
-#ifdef Q_OS_LINUX
-    // QString name = "alsa";
     QString name = settings.value(u"Output/current_plugin"_s, u"alsa"_s).toString();
-#elif defined Q_WS_WIN
-    QString name = settings.value(u"Output/current_plugin"_s, u"directsound"_s).toString();
-#elif defined Q_OS_MAC
-    QString name = settings.value(u"Output/current_plugin"_s, u"qtmultimedia"_s).toString();
-#else
-    QString name = settings.value(u"Output/current_plugin"_s, u"oss4"_s).toString();
-#endif
 #endif //MAUIKITAUDIO_DEFAULT_OUTPUT
     for(QmmpPluginCache *item : std::as_const(*m_cache))
     {

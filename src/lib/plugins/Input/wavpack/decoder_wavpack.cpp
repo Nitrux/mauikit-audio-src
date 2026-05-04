@@ -51,12 +51,7 @@ bool DecoderWavPack::initialize()
     {
         QString p = TrackInfo::pathFromUrl(m_path);
 
-#if defined(Q_OS_WIN) && defined(OPEN_FILE_UTF8)
-        m_context = WavpackOpenFileInput (p.toUtf8().constData(),
-                                          err, OPEN_WVC | OPEN_TAGS | OPEN_FILE_UTF8, 0);
-#else
         m_context = WavpackOpenFileInput (p.toLocal8Bit().constData(), err, OPEN_WVC | OPEN_TAGS, 0);
-#endif
         if (!m_context)
         {
             qCWarning(plugin, "error: %s", err);
@@ -84,12 +79,7 @@ bool DecoderWavPack::initialize()
         }
     }
     else
-#if defined(Q_OS_WIN) && defined(OPEN_FILE_UTF8)
-        m_context = WavpackOpenFileInput (m_path.toUtf8().constData(),
-                                          err, OPEN_WVC | OPEN_TAGS | OPEN_FILE_UTF8, 0);
-#else
         m_context = WavpackOpenFileInput (m_path.toLocal8Bit().constData(), err, OPEN_WVC | OPEN_TAGS, 0);
-#endif
 
     if (!m_context)
     {

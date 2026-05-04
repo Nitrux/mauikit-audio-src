@@ -34,11 +34,7 @@
 /*!
  * Converts a \b QString to a \b TagLib::FileName
  */
-#ifdef Q_OS_WIN
-#define QStringToFileName(s) TagLib::FileName(reinterpret_cast<const wchar_t *>(s.utf16()))
-#else
 #define QStringToFileName(s) s.toLocal8Bit().constData()
-#endif
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
 
@@ -226,19 +222,9 @@ public:
      * (see XDG Base Directory specification).
      */
     static QString userDataPath();
-#ifdef Q_OS_WIN
-    /*!
-     * Returns \b true if portable mode is enabled. Otherwise returns \b false.
-     */
-    static bool isPortable();
-#endif
-
 private:
     static QString m_configDir;
     static QString m_langID;
-#ifdef Q_OS_WIN
-    static QString m_appDir;
-#endif
 
 };
 

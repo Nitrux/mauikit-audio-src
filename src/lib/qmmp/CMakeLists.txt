@@ -7,16 +7,6 @@ set(libMauiKitAudioPlugin_DEFINES
     APP_NAME_SUFFIX="${APP_NAME_SUFFIX}"
 )
 
-# if(NOT QMMP_VERSION_STABLE) #add svn revision
-#     execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/svn_revision.sh
-#                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#                     OUTPUT_VARIABLE SVN_REVISION
-#                    OUTPUT_STRIP_TRAILING_WHITESPACE)
-#     if(SVN_REVISION)
-#         set(libqmmp_DEFINES ${libqmmp_DEFINES} SVN_REVISION="${SVN_REVISION}")
-#     endif(SVN_REVISION)
-# endif(NOT QMMP_VERSION_STABLE)
-
 set(libMauiKitAudioPlugin_DEFINES ${libMauiKitAudioPlugin_DEFINES} MAUIKITAUDIO_PLUGIN_DIR="${CMAKE_INSTALL_PREFIX}/${PLUGIN_DIR}")
 
 set(MAUIKITAUDIO_DEFAULT_OUTPUT "" CACHE STRING "default output plugin")
@@ -105,23 +95,3 @@ add_library(libMauiKitAudioPlugin STATIC ${libMauiKitAudioPlugin_SRCS})
 target_link_libraries(libMauiKitAudioPlugin PRIVATE Qt6::Widgets)
 set_target_properties(libMauiKitAudioPlugin PROPERTIES VERSION ${QMMP_VERSION} SOVERSION ${QMMP_SOVERSION} OUTPUT_NAME MauiKitAudio4)
 target_compile_definitions(libMauiKitAudioPlugin PRIVATE ${libMauiKitAudioPlugin_DEFINES})
-# install(TARGETS libMauiKitAudioPlugin LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-#                                 RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-#                                 ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
-#freebsd support
-# if(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
-#     target_link_directories(libqmmp PRIVATE /usr/local/lib)
-#     target_link_libraries(libqmmp PRIVATE iconv)
-# endif()
-
-# if(APP_NAME_SUFFIX)
-    # install(FILES ${libMauiKitAudioPlugin_DEVEL_HDRS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/MauiKit4/Audio)
-    # SET(MAUIKITAUDIO_INCLUDE_DIR ${CMAKE_INSTALL_FULL_INCLUDEDIR}/MauiKit4/Audio)
-# else()
-#     install(FILES ${libqmmp_DEVEL_HDRS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/MauiKit4/Audio)
-#     SET(QMMP_INCLUDE_DIR ${CMAKE_INSTALL_FULL_INCLUDEDIR})
-# endif()
-
-# configure_file(${CMAKE_CURRENT_SOURCE_DIR}/qmmp.pc.in ${CMAKE_CURRENT_BINARY_DIR}/qmmp${APP_NAME_SUFFIX}.pc @ONLY)
-# install(FILES ${CMAKE_CURRENT_BINARY_DIR}/qmmp${APP_NAME_SUFFIX}.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)

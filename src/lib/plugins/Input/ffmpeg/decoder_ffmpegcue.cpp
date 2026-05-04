@@ -51,11 +51,7 @@ bool DecoderFFmpegCue::initialize()
     QString filePath = TrackInfo::pathFromUrl(m_url, &m_track);
 
     AVFormatContext *in = nullptr;
-#ifdef Q_OS_WIN
-    if(avformat_open_input(&in, filePath.toUtf8().constData(), nullptr, nullptr) < 0)
-#else
     if(avformat_open_input(&in, filePath.toLocal8Bit().constData(), nullptr, nullptr) < 0)
-#endif
     {
         qCDebug(plugin, "unable to open file");
         return false;

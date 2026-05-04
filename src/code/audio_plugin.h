@@ -25,10 +25,6 @@ private:
     
     QString resolveFileUrl(const QString &filePath) const
     {
-#if defined(Q_OS_ANDROID)
-        return QStringLiteral(":/qt/qml/org/mauikit/filebrowsing/") + filePath;
-#else
         return baseUrl().toString() + QLatin1Char('/') + filePath;
-#endif
     }
 };

@@ -98,11 +98,7 @@ bool QmmpAudioEngine::play()
         return false;
     m_dithering->setFormats(m_decoders.head()->audioParameters().format(), m_output->outputAudioParameters().format());
     reset();
-#ifdef Q_OS_WIN
-    start(QThread::HighPriority);
-#else
     start();
-#endif
     return true;
 }
 

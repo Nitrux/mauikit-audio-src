@@ -21,8 +21,12 @@
 #include <QStringList>
 #include <QDateTime>
 #include <QFileInfo>
+#include <QFile>
 #include <QPluginLoader>
 #include <QApplication>
+#include <QCoreApplication>
+#include <QDir>
+#include <QStandardPaths>
 #include <QTranslator>
 #include "decoderfactory.h"
 #include "outputfactory.h"
@@ -31,18 +35,69 @@
 #include "inputsourcefactory.h"
 #include "qmmpplugincache_p.h"
 
+namespace
+{
+QSettings &pluginCacheSettings()
+{
+    static QSettings *settings = nullptr;
+    if (!settings)
+    {
+        QString cacheDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+        if (cacheDir.isEmpty())
+        {
+            const QString org = QCoreApplication::organizationName();
+            const QString app = QCoreApplication::applicationName();
+            cacheDir = QStandardPaths::writableLocation(QStandardPaths::GenericCacheLocation)
+                    + u"/"_s + org + u"/"_s + app;
+        }
+
+        QDir().mkpath(cacheDir);
+        settings = new QSettings(cacheDir + u"/qmmp-plugin-cache.ini"_s, QSettings::IniFormat);
+    }
+    return *settings;
+}
+
+void migrateLegacyPluginCache(QSettings *legacySettings)
+{
+    static bool migrated = false;
+    if (migrated || !legacySettings)
+        return;
+
+    migrated = true;
+    QSettings &cache = pluginCacheSettings();
+
+    legacySettings->beginGroup(u"PluginCache"_s);
+    const QStringList keys = legacySettings->allKeys();
+    cache.beginGroup(u"PluginCache"_s);
+
+    for (const QString &key : keys)
+    {
+        if (!cache.contains(key))
+            cache.setValue(key, legacySettings->value(key));
+        legacySettings->remove(key);
+    }
+
+    cache.endGroup();
+    legacySettings->endGroup();
+}
+}
+
 QmmpPluginCache::QmmpPluginCache(const QString &file, QSettings *settings)
 {
+    migrateLegacyPluginCache(settings);
+    QSettings &cacheSettings = pluginCacheSettings();
+    QSettings *cache = &cacheSettings;
+
     bool update = false;
     QFileInfo info(file);
     m_path = info.QFileInfo::canonicalFilePath();
 
-    settings->beginGroup(u"PluginCache"_s);
+    cache->beginGroup(u"PluginCache"_s);
     QString key = m_path;
     key.remove(0,1);
-    if(settings->allKeys().contains(key))
+    if(cache->allKeys().contains(key))
     {
-        QStringList values = settings->value(m_path).toStringList();
+        QStringList values = cache->value(m_path).toStringList();
         if(values.count() != 6)
             update = true;
         else
@@ -108,11 +163,11 @@ QmmpPluginCache::QmmpPluginCache(const QString &file, QSettings *settings)
             values << m_filters.join(QLatin1Char(';'));
             values << m_contentTypes.join(QLatin1Char(';'));
             values << info.lastModified().toString(Qt::ISODate);
-            settings->setValue(m_path, values);
+            cache->setValue(m_path, values);
             qCDebug(core, "added cache item \"%s=%s\"", qPrintable(info.fileName()), qPrintable(values.join(QLatin1Char(','))));
         }
     }
-    settings->endGroup();
+    cache->endGroup();
 }
 
 QString QmmpPluginCache::shortName() const
@@ -208,19 +263,23 @@ InputSourceFactory *QmmpPluginCache::inputSourceFactory()
 
 void QmmpPluginCache::update(QSettings *settings)
 {
+    migrateLegacyPluginCache(settings);
+    QSettings &cacheSettings = pluginCacheSettings();
+    QSettings *cache = &cacheSettings;
+
     //save changed filters list only
     if(m_filters != filters())
     {
         m_filters = filters();
 
-        settings->beginGroup(u"PluginCache"_s);
-        QStringList values = settings->value(m_path).toStringList();
+        cache->beginGroup(u"PluginCache"_s);
+        QStringList values = cache->value(m_path).toStringList();
         if(values.count() == 6)
         {
             values[3] = m_filters.join(QLatin1Char(';'));
-            settings->setValue(m_path, values);
+            cache->setValue(m_path, values);
         }
-        settings->endGroup();
+        cache->endGroup();
     }
 }
 
@@ -264,15 +323,19 @@ void QmmpPluginCache::loadTranslation(const QString &translation)
 
 void QmmpPluginCache::cleanup(QSettings *settings)
 {
-    settings->beginGroup(u"PluginCache"_s);
+    migrateLegacyPluginCache(settings);
+    QSettings &cacheSettings = pluginCacheSettings();
+    QSettings *cache = &cacheSettings;
 
-    for(const QString &key : settings->allKeys())
+    cache->beginGroup(u"PluginCache"_s);
+
+    for(const QString &key : cache->allKeys())
     {
         if(!QFile::exists(u"/"_s + key))
         {
-            settings->remove(key);
+            cache->remove(key);
             qCDebug(core) << "removed key" << key;
         }
     }
-    settings->endGroup();
+    cache->endGroup();
 }

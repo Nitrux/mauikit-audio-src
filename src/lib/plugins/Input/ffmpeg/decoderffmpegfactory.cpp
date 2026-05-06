@@ -86,6 +86,14 @@ bool DecoderFFmpegFactory::canDecode(QIODevice *i) const
         return true;
     if(filters.contains(u"*.m4a"_s) && (formats.contains(u"m4a"_s) || formats.contains(u"mp4"_s)))
         return true;
+    if(filters.contains(u"*.flac"_s) && formats.contains(u"flac"_s))
+        return true;
+    if(filters.contains(u"*.wav"_s) && (formats.contains(u"wav"_s) || formats.contains(u"wav64"_s)))
+        return true;
+    if((filters.contains(u"*.ogg"_s) || filters.contains(u"*.oga"_s)) && formats.contains(u"ogg"_s))
+        return true;
+    if(filters.contains(u"*.opus"_s) && formats.contains(u"ogg"_s))
+        return true;
     if(filters.contains(u"*.tak"_s) && formats.contains(u"tak"_s))
         return true;
     if(formats.contains(u"matroska"_s) && avcodec_find_decoder(AV_CODEC_ID_OPUS) && i->isSequential()) //audio from YouTube
@@ -98,9 +106,10 @@ DecoderProperties DecoderFFmpegFactory::properties() const
     QSettings settings;
     QSet<QString> filters = {
         u"*.wma"_s, u"*.ape"_s, u"*.tta"_s, u"*.m4a"_s, u"*.m4b"_s, u"*.aac"_s, u"*.mp3"_s, u"*.ra"_s, u"*.shn"_s,
-        u"*.ac3"_s, u"*.dts"_s, u"*.mka"_s,  u"*.vqf"_s, u"*.tak"_s, u"*.dsf"_s, u"*.dsdiff"_s
+        u"*.ac3"_s, u"*.dts"_s, u"*.mka"_s,  u"*.vqf"_s, u"*.tak"_s, u"*.dsf"_s, u"*.dsdiff"_s,
+        u"*.flac"_s, u"*.wav"_s, u"*.ogg"_s, u"*.oga"_s, u"*.opus"_s
     };
-    const QStringList disabledFilters = settings.value(u"FFMPEG/disabled_filters"_s, { u"*.mp3"_s }).toStringList();
+    const QStringList disabledFilters = settings.value(u"FFMPEG/disabled_filters"_s, QStringList()).toStringList();
 
     for(const QString &filter : std::as_const(disabledFilters))
         filters.remove(filter);
@@ -139,6 +148,17 @@ DecoderProperties DecoderFFmpegFactory::properties() const
         filters.remove(u"*.dsf"_s);
         filters.remove(u"*.dsdiff"_s);
     }
+    if(!avcodec_find_decoder(AV_CODEC_ID_FLAC))
+        filters.remove(u"*.flac"_s);
+    if(!avcodec_find_decoder(AV_CODEC_ID_PCM_S16LE))
+        filters.remove(u"*.wav"_s);
+    if(!avcodec_find_decoder(AV_CODEC_ID_VORBIS))
+    {
+        filters.remove(u"*.ogg"_s);
+        filters.remove(u"*.oga"_s);
+    }
+    if(!avcodec_find_decoder(AV_CODEC_ID_OPUS))
+        filters.remove(u"*.opus"_s);
 
     DecoderProperties properties;
     properties.name = tr("FFmpeg Plugin");
@@ -164,6 +184,14 @@ DecoderProperties DecoderFFmpegFactory::properties() const
         properties.contentTypes << u"audio/dts"_s;
     if(filters.contains(u"*.mka"_s))
         properties.contentTypes << u"audio/true-hd"_s << u"audio/x-matroska"_s;
+    if(filters.contains(u"*.flac"_s))
+        properties.contentTypes << u"audio/flac"_s << u"audio/x-flac"_s;
+    if(filters.contains(u"*.wav"_s))
+        properties.contentTypes << u"audio/wav"_s << u"audio/x-wav"_s;
+    if(filters.contains(u"*.ogg"_s) || filters.contains(u"*.oga"_s))
+        properties.contentTypes << u"audio/ogg"_s;
+    if(filters.contains(u"*.opus"_s))
+        properties.contentTypes << u"audio/opus"_s;
     properties.shortName = "ffmpeg"_L1;
     properties.hasAbout = true;
     properties.hasSettings = true;

@@ -15,6 +15,7 @@ set(USE_GME            TRUE CACHE BOOL "enable/disable game music plugin")
 set(USE_OPUS           TRUE CACHE BOOL "enable/disable opus plugin")
 set(USE_SID            TRUE CACHE BOOL "enable/disable sid plugin")
 set(USE_ARCHIVE        TRUE CACHE BOOL "enable/disable archive plugin")
+set(REQUIRE_WORKING_AUDIO_DECODER TRUE CACHE BOOL "Fail configuration when no practical local-audio decoder plugin can be built")
 
 
 if((USE_MAD OR USE_MPG123) AND TAGLIB_FOUND)
@@ -80,3 +81,39 @@ endif(USE_SID)
 if(USE_ARCHIVE AND TAGLIB_FOUND)
     add_subdirectory(archive)
 endif(USE_ARCHIVE AND TAGLIB_FOUND)
+
+# Guard against silently producing an unusable build (for local audio playback)
+# where only utility/metadata plugins (e.g. cue, cdaudio) are present.
+if(REQUIRE_WORKING_AUDIO_DECODER)
+    set(MAUIKIT_AUDIO_WORKING_DECODER_TARGETS
+        mpeg
+        ffmpeg
+        flac
+        vorbis
+        opus
+        aac
+        sndfile
+        wavpack
+        mpc
+        xmp
+        sid
+        wildmidi
+        gme
+        archive)
+
+    set(MAUIKIT_AUDIO_ENABLED_DECODERS "")
+    foreach(decoderTarget IN LISTS MAUIKIT_AUDIO_WORKING_DECODER_TARGETS)
+        if(TARGET ${decoderTarget})
+            list(APPEND MAUIKIT_AUDIO_ENABLED_DECODERS ${decoderTarget})
+        endif()
+    endforeach()
+
+    if(MAUIKIT_AUDIO_ENABLED_DECODERS STREQUAL "")
+        message(FATAL_ERROR
+            "No practical audio decoder plugins were built. "
+            "At least one of [mpeg, ffmpeg, flac, vorbis, opus, aac, sndfile, wavpack, mpc, xmp, sid, wildmidi, gme, archive] is required. "
+            "Install the missing -dev dependencies (for example: taglib, ffmpeg/libav*, mpg123/mad, flac, vorbis, opus, sndfile) and reconfigure.")
+    endif()
+
+    message(STATUS "Enabled input decoder plugins: ${MAUIKIT_AUDIO_ENABLED_DECODERS}")
+endif()

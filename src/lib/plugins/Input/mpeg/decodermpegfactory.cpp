@@ -69,7 +69,14 @@ bool DecoderMpegFactory::canDecode(QIODevice *input) const
     char buf[8192];
     qint64 dataSize = sizeof(buf);
 
-    if(input->peek(buf, sizeof(buf)) != sizeof(buf))
+    // Always read from the file start: peek() reads from the current position
+    // which may be non-zero if a preceding factory left the pointer there.
+    const qint64 savedPos = input->pos();
+    input->seek(0);
+    const qint64 headerRead = input->read(buf, sizeof(buf));
+    input->seek(savedPos);
+
+    if(headerRead != sizeof(buf))
         return false;
 
     if (!memcmp(buf, "FLV", 3)) //skip Macromedia Flash Video
@@ -78,27 +85,12 @@ bool DecoderMpegFactory::canDecode(QIODevice *input) const
     if (!memcmp(buf + 8, "WAVE", 4))
         return !memcmp(buf + 20, "U" ,1);
 
+    // A file starting with an ID3 header is a tagged audio file.
+    // The first valid MPEG frame may be arbitrarily far into the file (after large ID3 tags
+    // or junk sections), so probing with MAD here is unreliable. Trust the tag and let
+    // the decoder's initialize() be the real format gatekeeper.
     if(!memcmp(buf, "ID3", 3))
-    {
-        TagLib::ByteVector byteVector(buf, dataSize);
-        TagLib::ID3v2::Header header(byteVector);
-
-        //skip id3v2tag if possible
-        if(input->isSequential())
-        {
-            if(header.tagSize() >= dataSize)
-                return false;
-
-            dataSize -= header.tagSize();
-            memmove(buf, buf + header.tagSize(), dataSize);
-        }
-        else
-        {
-            input->seek(header.tagSize());
-            dataSize = input->read(buf, sizeof(buf));
-            input->seek(0); //restore initial position
-        }
-    }
+        return true;
 
     if(dataSize <= 0)
         return false;
@@ -117,28 +109,18 @@ bool DecoderMpegFactory::canDecode(QIODevice *input) const
     {
         struct mad_stream stream;
         struct mad_header header;
-        struct mad_frame frame;
         int dec_res;
 
         mad_stream_init(&stream);
         mad_header_init(&header);
-        mad_frame_init(&frame);
-        mad_stream_buffer (&stream, (unsigned char *) buf, dataSize);
+        mad_stream_buffer(&stream, (unsigned char *) buf, dataSize);
         stream.error = MAD_ERROR_NONE;
 
         while ((dec_res = mad_header_decode(&header, &stream)) == -1
                && MAD_RECOVERABLE(stream.error))
             ;
 
-        if(dec_res == 0)
-        {
-            while ((dec_res = mad_frame_decode(&frame, &stream)) == -1
-                   && MAD_RECOVERABLE(stream.error))
-                ;
-        }
-
         mad_stream_finish(&stream);
-        mad_frame_finish(&frame);
         return dec_res == 0;
     }
 #endif

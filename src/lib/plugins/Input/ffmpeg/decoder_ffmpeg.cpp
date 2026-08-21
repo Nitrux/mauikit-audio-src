@@ -20,6 +20,10 @@
 
 #include "replaygainreader.h"
 #include "decoder_ffmpeg.h"
+
+#include <QFile>
+#include <QThread>
+
 extern "C"{
 #include <libavutil/channel_layout.h>
 #include <libavutil/frame.h>
@@ -123,7 +127,12 @@ bool DecoderFFmpeg::initialize()
     AVProbeData pd;
     memset(&pd, 0, sizeof(pd));
     uint8_t buf[PROBE_BUFFER_SIZE + AVPROBE_PADDING_SIZE];
-    pd.filename = m_path.toLocal8Bit().constData();
+    const QByteArray encodedFileName = QFile::encodeName(m_path);
+    pd.filename = encodedFileName.constData();
+    qCInfo(plugin) << "[VVAVE_AUDIO_TRACE] ffmpeg-probe-enter" << this
+                   << "path" << m_path
+                   << "filenameData" << static_cast<const void *>(pd.filename)
+                   << "thread" << QThread::currentThreadId();
     pd.buf_size = input()->peek((char*)buf, sizeof(buf) - AVPROBE_PADDING_SIZE);
     pd.buf = buf;
     if(pd.buf_size < PROBE_BUFFER_SIZE)
@@ -136,6 +145,10 @@ bool DecoderFFmpeg::initialize()
 #else
     AVInputFormat *fmt = av_probe_input_format(&pd, 1);
 #endif
+    qCInfo(plugin) << "[VVAVE_AUDIO_TRACE] ffmpeg-probe-return" << this
+                   << "format" << fmt
+                   << "filenameData" << static_cast<const void *>(pd.filename)
+                   << "thread" << QThread::currentThreadId();
     if(!fmt)
     {
         qCWarning(plugin, "usupported format");

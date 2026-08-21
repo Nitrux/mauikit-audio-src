@@ -19,6 +19,7 @@
  ***************************************************************************/
 
 #include <QMetaType>
+#include <QThread>
 #include <QIODevice>
 #include <QFile>
 #include "replaygain_p.h"
@@ -51,6 +52,10 @@ QmmpAudioEngine::QmmpAudioEngine(QObject *parent) : AbstractEngine(parent)
 
 QmmpAudioEngine::~QmmpAudioEngine()
 {
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] engine-destroy" << this
+                 << "decoder" << m_decoder
+                 << "output" << m_output
+                 << "thread" << QThread::currentThreadId();
     QmmpAudioEngine::stop();
     reset();
     delete [] m_output_buf;
@@ -73,6 +78,11 @@ void QmmpAudioEngine::reset()
 
 void QmmpAudioEngine::clearDecoders()
 {
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] clear-decoders" << this
+                 << "decoder" << m_decoder
+                 << "queued" << m_decoders.count()
+                 << "inputs" << m_inputs.count()
+                 << "thread" << QThread::currentThreadId();
     if(m_decoder)
     {
         m_inputs.take(m_decoder)->deleteLater ();
@@ -89,6 +99,11 @@ void QmmpAudioEngine::clearDecoders()
 
 bool QmmpAudioEngine::play()
 {
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] engine-play-enter" << this
+                 << "running" << isRunning()
+                 << "decoders" << m_decoders.count()
+                 << "output" << m_output
+                 << "thread" << QThread::currentThreadId();
     if(isRunning() || m_decoders.isEmpty() || (m_output && m_output->isRunning()))
         return false;
 
@@ -99,11 +114,19 @@ bool QmmpAudioEngine::play()
     m_dithering->setFormats(m_decoders.head()->audioParameters().format(), m_output->outputAudioParameters().format());
     reset();
     start();
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] engine-play-return" << this
+                 << "output" << m_output
+                 << "thread" << QThread::currentThreadId();
     return true;
 }
 
 bool QmmpAudioEngine::enqueue(InputSource *source)
 {
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] engine-enqueue-enter" << this
+                 << "source" << source
+                 << "path" << (source ? source->path() : QString())
+                 << "decoder" << m_decoder
+                 << "thread" << QThread::currentThreadId();
     mutex()->lock();
     if(m_decoder && m_decoder->nextURL() == source->path())
     {
@@ -116,7 +139,7 @@ bool QmmpAudioEngine::enqueue(InputSource *source)
     mutex()->unlock();
 
     DecoderFactory *factory = nullptr;
-    qDebug() << "Source is:" << source->path();
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] engine-probe-source" << this << source << source->path();
 
     if(!source->path().contains(u"://"_s))
         factory = Decoder::findByFilePath(source->path(), true);
@@ -137,6 +160,11 @@ bool QmmpAudioEngine::enqueue(InputSource *source)
     if(factory->properties().noInput && source->ioDevice())
         source->ioDevice()->close();
     Decoder *decoder = factory->create(source->path(), source->ioDevice());
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] decoder-created" << this
+                 << "decoder" << decoder
+                 << "factory" << factory->properties().shortName
+                 << "source" << source
+                 << "thread" << QThread::currentThreadId();
     if(!decoder->initialize())
     {
         qCWarning(core, "invalid file format");
@@ -148,6 +176,11 @@ bool QmmpAudioEngine::enqueue(InputSource *source)
     m_decoders.enqueue(decoder);
     m_inputs.insert(decoder, source);
     mutex()->unlock();
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] engine-enqueue-return" << this
+                 << "decoder" << decoder
+                 << "queued" << m_decoders.count()
+                 << "inputs" << m_inputs.count()
+                 << "thread" << QThread::currentThreadId();
     if(!decoder->totalTime())
         source->setOffset(-1);
     source->setParent(this);
@@ -237,6 +270,11 @@ void QmmpAudioEngine::pause()
 
 void QmmpAudioEngine::stop()
 {
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] engine-stop-enter" << this
+                 << "running" << isRunning()
+                 << "decoder" << m_decoder
+                 << "output" << m_output
+                 << "thread" << QThread::currentThreadId();
     m_user_stop = true;
 
     if (m_output)
@@ -262,6 +300,10 @@ void QmmpAudioEngine::stop()
         delete m_effects.takeFirst();
     m_replayGain = nullptr;
     m_dithering = nullptr;
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] engine-stop-return" << this
+                 << "decoder" << m_decoder
+                 << "output" << m_output
+                 << "thread" << QThread::currentThreadId();
 }
 
 qint64 QmmpAudioEngine::produceSound(unsigned char *data, qint64 size, quint32 brate)

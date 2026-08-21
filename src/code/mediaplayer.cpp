@@ -1,19 +1,33 @@
 #include "mediaplayer.h"
 #include <QDebug>
+#include <QLoggingCategory>
+#include <QThread>
 #include <QTime>
 
 #include <qmmp/soundcore.h>
 #include <qmmp/abstractengine.h>
 #include <qmmp/output.h>
 
+Q_LOGGING_CATEGORY(lcMauiAudioTrace, "mauikit.audio.trace", QtInfoMsg)
+
 MediaPlayer::MediaPlayer(QObject *parent)
     : QObject{parent}
     , m_core(new SoundCore(this))
 {
+    qCInfo(lcMauiAudioTrace) << "media-player-created" << this
+                             << "core" << m_core
+                             << "thread" << QThread::currentThreadId();
     m_preferredOutput = Output::currentFactory()->properties().shortName;
 
     connect(m_core, &SoundCore::finished, this, &MediaPlayer::finished);
     connect(m_core, &SoundCore::stateChanged, this, &MediaPlayer::stateChanged);
+    connect(m_core, &SoundCore::stateChanged, this, [this](Qmmp::State state) {
+        qCInfo(lcMauiAudioTrace) << "core-state-changed" << this
+                                 << "core" << m_core
+                                 << "state" << static_cast<int>(state)
+                                 << "source" << m_source
+                                 << "thread" << QThread::currentThreadId();
+    });
     connect(m_core, &SoundCore::volumeChanged, this, &MediaPlayer::volumeChanged);
     connect(m_core, &SoundCore::elapsedChanged, this, [this](qint64) {
         Q_EMIT positionChanged();
@@ -30,6 +44,11 @@ QUrl MediaPlayer::source() const
 
 void MediaPlayer::setSource(const QUrl &newSource)
 {
+    qCInfo(lcMauiAudioTrace) << "set-source" << this
+                             << "old" << m_source
+                             << "new" << newSource
+                             << "state" << static_cast<int>(m_core->state())
+                             << "thread" << QThread::currentThreadId();
     if (m_source == newSource)
         return;
     m_source = newSource;
@@ -38,6 +57,11 @@ void MediaPlayer::setSource(const QUrl &newSource)
 
 void MediaPlayer::play()
 {
+    qCInfo(lcMauiAudioTrace) << "play-enter" << this
+                             << "core" << m_core
+                             << "source" << m_source
+                             << "state" << static_cast<int>(m_core->state())
+                             << "thread" << QThread::currentThreadId();
     if (!m_source.isValid() || m_source.isEmpty()) {
         Q_EMIT error("The source URL is not valid or is not set");
         return;
@@ -49,6 +73,11 @@ void MediaPlayer::play()
     }
 
     const auto ok = m_core->play(m_source.toLocalFile());
+    qCInfo(lcMauiAudioTrace) << "play-return" << this
+                             << "core" << m_core
+                             << "ok" << ok
+                             << "state" << static_cast<int>(m_core->state())
+                             << "thread" << QThread::currentThreadId();
     if (!ok) {
         Q_EMIT error("File could not be played.");
     } else {
@@ -68,7 +97,15 @@ void MediaPlayer::pause()
 
 void MediaPlayer::stop()
 {
+    qCInfo(lcMauiAudioTrace) << "stop-enter" << this
+                             << "core" << m_core
+                             << "state" << static_cast<int>(m_core->state())
+                             << "thread" << QThread::currentThreadId();
     m_core->stop();
+    qCInfo(lcMauiAudioTrace) << "stop-return" << this
+                             << "core" << m_core
+                             << "state" << static_cast<int>(m_core->state())
+                             << "thread" << QThread::currentThreadId();
     Q_EMIT trackChanged();
     Q_EMIT positionChanged();
 }

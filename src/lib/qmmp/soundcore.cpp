@@ -22,6 +22,7 @@
 #include <QFile>
 #include <QApplication>
 #include <QSettings>
+#include <QThread>
 #include <QDir>
 #include "qmmpevents_p.h"
 #include "qmmpaudioengine_p.h"
@@ -40,6 +41,8 @@ SoundCore *SoundCore::m_instance = nullptr;
 SoundCore::SoundCore(QObject *parent)
         : QObject(parent)
 {
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] sound-core-created" << this
+                 << "thread" << QThread::currentThreadId();
     if(m_instance)
         qCFatal(core) << "only one instance is allowed";
     qRegisterMetaType<Qmmp::State>("Qmmp::State");
@@ -59,12 +62,21 @@ SoundCore::SoundCore(QObject *parent)
 
 SoundCore::~SoundCore()
 {
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] sound-core-destroy" << this
+                 << "engine" << m_engine
+                 << "thread" << QThread::currentThreadId();
     stop();
     m_instance = nullptr;
 }
 
 bool SoundCore::play(const QString &source, bool queue, qint64 offset)
 {
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] sound-core-play-enter" << this
+                 << "engine" << m_engine
+                 << "source" << source
+                 << "queue" << queue
+                 << "state" << static_cast<int>(state())
+                 << "thread" << QThread::currentThreadId();
     if(!queue)
         stop();
 
@@ -87,11 +99,21 @@ bool SoundCore::play(const QString &source, bool queue, qint64 offset)
     }
     if(m_handler->state() == Qmmp::Stopped)
         m_handler->dispatch(Qmmp::Buffering);
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] sound-core-play-return" << this
+                 << "input" << s
+                 << "pendingSources" << m_sources.count()
+                 << "state" << static_cast<int>(state())
+                 << "thread" << QThread::currentThreadId();
     return true;
 }
 
 void SoundCore::stop()
 {
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] sound-core-stop-enter" << this
+                 << "engine" << m_engine
+                 << "pendingSources" << m_sources.count()
+                 << "state" << static_cast<int>(state())
+                 << "thread" << QThread::currentThreadId();
     qApp->sendPostedEvents(this, 0);
     m_path.clear();
     qDeleteAll(m_sources);
@@ -107,6 +129,10 @@ void SoundCore::stop()
     m_volumeControl->reload();
     if(state() == Qmmp::NormalError || state() == Qmmp::FatalError || state() == Qmmp::Buffering)
         StateHandler::instance()->dispatch(Qmmp::Stopped); //clear error and buffering state
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] sound-core-stop-return" << this
+                 << "engine" << m_engine
+                 << "state" << static_cast<int>(state())
+                 << "thread" << QThread::currentThreadId();
 }
 
 void SoundCore::pause()
@@ -257,6 +283,13 @@ void SoundCore::startNextSource()
 
     InputSource *s = m_sources.dequeue();
     m_path = s->path();
+    qCInfo(core) << "[VVAVE_AUDIO_TRACE] start-next-source" << this
+                 << "engine" << m_engine
+                 << "input" << s
+                 << "path" << m_path
+                 << "remainingSources" << m_sources.count()
+                 << "state" << static_cast<int>(state())
+                 << "thread" << QThread::currentThreadId();
 
     if(s->ioDevice() && !s->ioDevice()->isOpen() && !s->ioDevice()->open(QIODevice::ReadOnly))
     {
@@ -349,6 +382,10 @@ bool SoundCore::event(QEvent *e)
     if(e->type() == EVENT_STATE_CHANGED)
     {
         Qmmp::State st = ((StateChangedEvent *) e)->currentState();
+        qCInfo(core) << "[VVAVE_AUDIO_TRACE] sound-core-event-state" << this
+                     << "engine" << m_engine
+                     << "state" << static_cast<int>(st)
+                     << "thread" << QThread::currentThreadId();
         emit stateChanged(st);
         if(st == Qmmp::Stopped)
         {

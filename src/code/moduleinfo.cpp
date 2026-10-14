@@ -1,5 +1,5 @@
 #include "moduleinfo.h"
-#include "../audio_version.h"
+#include "audio_version.h"
 
 QString MauiKitAudio::versionString()
 {

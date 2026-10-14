@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QUrl>
 #include <QQmlEngine>
+#include <QtQmlIntegration/qqmlintegration.h>
 #include <QStringList>
 
 #include "audio_export.h"

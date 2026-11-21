@@ -90,3 +90,19 @@ install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/audio_export.h
     DESTINATION ${KDE_INSTALL_INCLUDEDIR}/MauiKit${MAUI_MAJOR_VERSION}/Audio
     COMPONENT Devel)
+
+target_precompile_headers(MauiKitAudio${MAUI_MAJOR_VERSION} PRIVATE
+    <QDebug>
+    <QFileInfo>
+    <QGuiApplication>
+    <QQmlEngine>
+    <QQuickWindow>
+)
+
+target_precompile_headers(MauiKitAudio${MAUI_MAJOR_VERSION}plugin PRIVATE
+    <QDebug>
+    <QFileInfo>
+    <QGuiApplication>
+    <QQmlEngine>
+    <QQuickWindow>
+)

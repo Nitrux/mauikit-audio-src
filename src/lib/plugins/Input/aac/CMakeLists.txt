@@ -1,5 +1,9 @@
 project(libaac)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install path prefix" FORCE)
+endif()
+
 # libfaad
 pkg_search_module(FAAD faad2>=2.9.2 IMPORTED_TARGET)
 

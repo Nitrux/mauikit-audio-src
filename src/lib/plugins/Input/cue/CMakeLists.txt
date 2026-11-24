@@ -1,5 +1,9 @@
 project(libcue)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install path prefix" FORCE)
+endif()
+
 if(USE_ENCA AND ENCA_FOUND)
     add_definitions(-DWITH_ENCA)
 endif(USE_ENCA AND ENCA_FOUND)

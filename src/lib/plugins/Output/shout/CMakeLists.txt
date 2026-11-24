@@ -1,5 +1,9 @@
 project(libshout)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install path prefix" FORCE)
+endif()
+
 # libshout and other required libraries
 pkg_check_modules(SHOUT ogg vorbis vorbisenc shout>=2.4.3 soxr IMPORTED_TARGET)
 

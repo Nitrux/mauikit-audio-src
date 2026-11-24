@@ -1,5 +1,9 @@
 project(libflac)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install path prefix" FORCE)
+endif()
+
 # libflac
 pkg_search_module(FLAC flac IMPORTED_TARGET)
 

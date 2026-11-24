@@ -1,5 +1,9 @@
 project(libnull)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install path prefix" FORCE)
+endif()
+
 set(libnull_SRCS
   outputnull.cpp
   outputnullfactory.cpp

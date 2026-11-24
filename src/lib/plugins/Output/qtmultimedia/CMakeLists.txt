@@ -1,5 +1,9 @@
 project(libqtmultimedia)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install path prefix" FORCE)
+endif()
+
 SET(libqtmultimedia_SRCS
   outputqtmultimedia.cpp
   outputqtmultimediafactory.cpp

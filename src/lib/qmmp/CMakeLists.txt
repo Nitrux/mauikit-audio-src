@@ -1,5 +1,9 @@
 project(libMauiKitAudioPlugin)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install path prefix" FORCE)
+endif()
+
 add_definitions(-DMAUIKITAUDIO_LIBRARY)
 set(libMauiKitAudioPlugin_DEFINES
     LIB_DIR="/${LIB_DIR}"

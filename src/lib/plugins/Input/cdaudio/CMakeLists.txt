@@ -1,5 +1,9 @@
 project(libcdaudio)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install path prefix" FORCE)
+endif()
+
 # libcdaudio
 pkg_check_modules(CDIO libcdio>=1.0.0 libcdio_cdda libcdio_paranoia IMPORTED_TARGET)
 

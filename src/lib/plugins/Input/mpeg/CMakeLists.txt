@@ -1,5 +1,9 @@
 project(libmpeg)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install path prefix" FORCE)
+endif()
+
 include(CheckIncludeFileCXX)
 
 # libmad

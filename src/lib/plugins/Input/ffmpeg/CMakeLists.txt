@@ -1,5 +1,9 @@
 project(libffmpeg)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install path prefix" FORCE)
+endif()
+
 # fixes ffmpeg defines
 add_definitions(-D__STDC_CONSTANT_MACROS)
 

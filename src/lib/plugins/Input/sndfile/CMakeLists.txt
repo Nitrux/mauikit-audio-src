@@ -1,5 +1,9 @@
 project(libsndfile)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install path prefix" FORCE)
+endif()
+
 # libsndfile
 pkg_search_module(SNDFILE sndfile>=1.0.22 IMPORTED_TARGET)
 

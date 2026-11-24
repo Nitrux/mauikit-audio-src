@@ -1,5 +1,9 @@
 project(libvorbis)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install path prefix" FORCE)
+endif()
+
 # libvorbis
 pkg_check_modules(VORBIS ogg vorbis vorbisfile IMPORTED_TARGET)
 

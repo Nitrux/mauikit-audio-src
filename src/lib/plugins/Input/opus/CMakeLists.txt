@@ -1,5 +1,9 @@
 project(libopus)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install path prefix" FORCE)
+endif()
+
 # libopus and libopusfile
 pkg_check_modules(OPUS opus>=1.0.2 opusfile>=0.2 IMPORTED_TARGET)
 

@@ -1,5 +1,9 @@
 project(libalsa)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install path prefix" FORCE)
+endif()
+
 # alsa
 pkg_search_module(ALSA alsa>=1.0.22 IMPORTED_TARGET)
 

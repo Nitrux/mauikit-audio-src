@@ -1,5 +1,9 @@
 project(libpulseaudio)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Install path prefix" FORCE)
+endif()
+
 # pulseaudio
 pkg_check_modules(PULSE libpulse>=0.9.19 IMPORTED_TARGET)
 
